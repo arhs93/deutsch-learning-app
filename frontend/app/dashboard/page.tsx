@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -28,6 +29,19 @@ export default function DashboardPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  async function handleDelete(docId: string, title: string) {
+    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    setDeleting(docId);
+    try {
+      await api.deleteDocument(docId);
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    } catch (e) {
+      alert("Failed to delete document.");
+    } finally {
+      setDeleting(null);
+    }
+  }
 
   if (loading) {
     return (
@@ -99,7 +113,7 @@ export default function DashboardPage() {
                 <CardContent className="flex items-center justify-between py-4">
                   <div>
                     <p className="font-semibold">{doc.title}</p>
-                    <div className="flex gap-2 mt-1">
+                    <div className="flex gap-2 mt-1 flex-wrap">
                       <Badge variant="outline">{doc.source_type}</Badge>
                       <Badge
                         variant={
@@ -117,14 +131,23 @@ export default function DashboardPage() {
                       )}
                     </div>
                   </div>
-                  {doc.processing_status === "ready" && (
-                    <Link
-                      href={`/documents/${doc.id}`}
-                      className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                  <div className="flex gap-2 shrink-0">
+                    {doc.processing_status === "ready" && (
+                      <Link
+                        href={`/documents/${doc.id}`}
+                        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                      >
+                        Study
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => handleDelete(doc.id, doc.title)}
+                      disabled={deleting === doc.id}
+                      className="text-sm px-3 py-1 rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
                     >
-                      Study
-                    </Link>
-                  )}
+                      {deleting === doc.id ? "Deleting…" : "Delete"}
+                    </button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

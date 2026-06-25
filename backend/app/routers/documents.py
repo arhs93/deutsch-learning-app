@@ -7,13 +7,19 @@ from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, B
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.database import get_db
+from app.database import get_db, get_session
 from app.models import Document, User
 from app.tasks.process_document import process_document
 
 router = APIRouter(tags=["documents"])
 
 UPLOAD_DIR = Path("uploads")
+
+
+async def _run_processing(doc_id: uuid.UUID) -> None:
+    """Run document processing with its own dedicated DB session."""
+    async with get_session() as db:
+        await process_document(doc_id, db)
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 ALLOWED_EXTENSIONS = {".pdf", ".txt", ".srt"}
@@ -48,7 +54,7 @@ async def upload_document(
     db.add(doc)
     await db.commit()
 
-    background_tasks.add_task(process_document, doc_id, db)
+    background_tasks.add_task(_run_processing, doc_id)
 
     return {"document_id": str(doc_id), "status": "pending"}
 

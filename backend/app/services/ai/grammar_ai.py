@@ -19,7 +19,9 @@ communicative purpose, not just the rule)
 - example_translation: accurate English translation of that sentence
 - difficulty: integer 1-5 (1=A1/A2 beginner, 5=C1/C2 advanced)
 
-Return ONLY a JSON array. If no significant patterns are found, return an empty array []."""
+Return a JSON object with a single key "patterns" containing an array. \
+If no significant patterns are found, return {"patterns": []}. \
+Example: {"patterns": [{"pattern_type": "modal_verb", "pattern_name": "Modal verb with infinitive", ...}]}"""
 
 
 async def detect_grammar_patterns(sentences: list[str]) -> list[dict]:
@@ -40,9 +42,11 @@ async def detect_grammar_patterns(sentences: list[str]) -> list[dict]:
             response_format={"type": "json_object"},
             temperature=0.3,
         )
-        raw = response.choices[0].message.content or "[]"
+        raw = response.choices[0].message.content or "{}"
         parsed = json.loads(raw)
-        items = parsed if isinstance(parsed, list) else next(iter(parsed.values()), [])
+        items = parsed.get("patterns", []) if isinstance(parsed, dict) else parsed
+        if not isinstance(items, list):
+            return []
         return items
     except Exception as exc:
         logger.error("grammar_ai failed: %s", exc)

@@ -13,9 +13,9 @@ extracted from an authentic document. For each word, provide:
 5. CEFR difficulty level (A1/A2/B1/B2/C1/C2)
 6. difficulty as integer 1-5 (1=A1/A2, 3=B1/B2, 5=C1/C2)
 
-Return ONLY a JSON array of objects with keys: \
+Return a JSON object with a single key "words" containing an array of objects, each with keys: \
 german_word, lemma, translation_en, part_of_speech, gender, plural_form, cefr_level, difficulty.
-No explanations outside the JSON."""
+Example: {"words": [{"german_word": "lernen", "lemma": "lernen", "translation_en": "to learn", ...}]}"""
 
 
 async def enrich_vocabulary(candidates: list[dict], context_chunk: str) -> list[dict]:
@@ -41,9 +41,11 @@ async def enrich_vocabulary(candidates: list[dict], context_chunk: str) -> list[
             temperature=0.2,
         )
         raw = response.choices[0].message.content or "{}"
-        # GPT-4o with json_object wraps arrays in an object
         parsed = json.loads(raw)
-        items = parsed if isinstance(parsed, list) else next(iter(parsed.values()), [])
+        items = parsed.get("words", []) if isinstance(parsed, dict) else parsed
+        if not isinstance(items, list):
+            logger.warning("vocabulary_ai returned unexpected shape: %s", type(items))
+            return []
         return items
     except Exception as exc:
         logger.error("vocabulary_ai failed: %s", exc)
