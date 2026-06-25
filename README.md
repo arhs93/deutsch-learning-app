@@ -65,6 +65,8 @@ Deutsch_Learning_App/
 
 ## Getting Started
 
+> **Every time you work on the app** you need two terminals running — one for the backend, one for the frontend. See [Daily Development](#daily-development) below if you've already set everything up.
+
 ### Prerequisites
 
 - Python 3.13
@@ -91,7 +93,7 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Install spaCy + German model (large download ~600MB)
+# Install spaCy + German model (large download ~600MB, one-time only)
 pip install "spacy>=3.8,<4.0"
 python -m spacy download de_core_news_lg
 
@@ -99,10 +101,10 @@ python -m spacy download de_core_news_lg
 cp .env.example .env
 # Edit .env with your Supabase and OpenAI credentials
 
-# Run database migrations
+# Run database migrations (one-time only)
 PYTHONPATH=. .venv/bin/alembic upgrade head
 
-# Start the backend
+# Start the backend (Terminal 1)
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -117,10 +119,32 @@ npm install
 cp .env.local.example .env.local
 # Edit .env.local with your Supabase and API URL
 
+# Start the frontend (Terminal 2)
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Daily Development
+
+Once set up, this is all you need each time you want to run the app:
+
+**Terminal 1 — backend:**
+```bash
+cd backend
+source .venv/bin/activate
+uvicorn app.main:app --reload --port 8000
+```
+
+**Terminal 2 — frontend:**
+```bash
+cd frontend
+npm run dev
+```
+
+Both must be running at the same time. Your data is stored in Supabase (cloud) so it persists between sessions.
 
 ---
 
