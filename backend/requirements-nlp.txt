@@ -1,0 +1,3 @@
+# Install separately after main requirements due to size
+# spacy==3.8.3
+# Run after: python -m spacy download de_core_news_lg
