@@ -1,3 +1,4 @@
-# Install separately after main requirements due to size
-# spacy==3.8.3
-# Run after: python -m spacy download de_core_news_lg
+# Install separately after main requirements due to large download size (~600MB)
+# Run: pip install -r requirements-nlp.txt
+# Then: python -m spacy download de_core_news_lg
+spacy>=3.8,<4.0
